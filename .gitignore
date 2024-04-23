@@ -1,3 +1,7 @@
+models
+data/*.jsonl
+wandb
+
 .vscode
 minio/
 *.db
