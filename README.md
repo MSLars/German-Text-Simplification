@@ -29,13 +29,7 @@ conda develop .
 To train custom models you need a `.jsonl` (JSON Lines)[https://jsonlines.org/] trainng file with two mandatory fields:
 
 ```json
-{"complex":"Non-simplified text", "easy": "simplified version of the text", "ll":"(optional metadata, necessary if you want to add domain information in training)", "domain":"(optional metadata, necessary if you want to add domain information in training)"}
-```
 
-In the Project root dir execute:
-
-```bash
-PYTHONUNBUFFERED=1;TOKENIZERS_PARALLELISM=false;WANDB_MODE=offline python -m gts.train --model_path benjamin/gpt2-wechsel-german --data_path data/beta_train.jsonl
 ```
 
 ## Making Predictions
