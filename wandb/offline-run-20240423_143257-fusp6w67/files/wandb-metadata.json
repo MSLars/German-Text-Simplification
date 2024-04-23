@@ -1,0 +1,192 @@
+{
+    "os": "Linux-6.8.6-200.fc39.x86_64-x86_64-with-glibc2.38",
+    "python": "3.9.18",
+    "heartbeatAt": "2024-04-23T12:32:57.980948",
+    "startedAt": "2024-04-23T12:32:57.829008",
+    "docker": null,
+    "cuda": null,
+    "args": [
+        "--model_path",
+        "benjamin/gpt2-wechsel-german",
+        "--data_path",
+        "data/beta_train.jsonl"
+    ],
+    "state": "running",
+    "program": "-m gts.train",
+    "codePathLocal": null,
+    "git": {
+        "remote": "git@github.com:MSLars/German-Text-Simplification.git",
+        "commit": "ab93b9d5614468c0603c98856568a15a085a5fab"
+    },
+    "email": "kloeser@fh-aachen.de",
+    "root": "/home/lars/Projekte/German-Text-Simplification",
+    "host": "fedora.fritz.box",
+    "username": "lars",
+    "executable": "/home/lars/mambaforge/envs/gts/bin/python",
+    "cpu_count": 20,
+    "cpu_count_logical": 28,
+    "cpu_freq": {
+        "current": 2333.870785714286,
+        "min": 800.0,
+        "max": 4571.428571428572
+    },
+    "cpu_freq_per_core": [
+        {
+            "current": 2560.286,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 849.729,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3609.359,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3661.019,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 1939.714,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3250.702,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 800.0,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 800.0,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 3472.935,
+            "min": 800.0,
+            "max": 5300.0
+        },
+        {
+            "current": 800.0,
+            "min": 800.0,
+            "max": 5300.0
+        },
+        {
+            "current": 1148.364,
+            "min": 800.0,
+            "max": 5300.0
+        },
+        {
+            "current": 1499.359,
+            "min": 800.0,
+            "max": 5300.0
+        },
+        {
+            "current": 3032.699,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 2816.254,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 2147.72,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 800.0,
+            "min": 800.0,
+            "max": 5100.0
+        },
+        {
+            "current": 2072.572,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2430.553,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2650.575,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3077.717,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2965.036,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2090.422,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2965.602,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2947.142,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 3200.862,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 1723.573,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 2496.36,
+            "min": 800.0,
+            "max": 3800.0
+        },
+        {
+            "current": 1843.494,
+            "min": 800.0,
+            "max": 3800.0
+        }
+    ],
+    "disk": {
+        "/": {
+            "total": 1906.1416015625,
+            "used": 175.8767852783203
+        }
+    },
+    "gpu": "NVIDIA RTX 5000 Ada Generation Laptop GPU",
+    "gpu_count": 1,
+    "gpu_devices": [
+        {
+            "name": "NVIDIA RTX 5000 Ada Generation Laptop GPU",
+            "memory_total": 17171480576
+        }
+    ],
+    "memory": {
+        "total": 62.48045349121094
+    }
+}
