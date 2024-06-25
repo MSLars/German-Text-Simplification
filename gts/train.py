@@ -119,7 +119,7 @@ if __name__ == "__main__":
     parser.add_argument('--gradient_accumulation_steps', type=int, default=2, help='Gradient accumulation steps')
     parser.add_argument('--num_epochs', type=int, default=3, help='Number of epochs')
     parser.add_argument('--gradient_checkpointing', action='store_true', help='Enable gradient checkpointing')
-    parser.add_argument('--include_domain_info', type=bool, default=False, help='Include domain information in the data')
+    parser.add_argument('--include_domain_info', action='store_true', help='Include domain information in the data')
     parser.add_argument('--data_path', type=str, default="data/beta_train.jsonl", help='Path to training data')
     parser.add_argument('--output_dir', type=str, default="models", help='Output directory for saving results')
     parser.add_argument('--deepspeed', action='store_true', help='Enable deepspeed optimization')
