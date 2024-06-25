@@ -1,11 +1,8 @@
 from pathlib import Path
 import argparse
 
-from torch import nn
 import torch
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
-from transformers.trainer_pt_utils import get_parameter_names
-import bitsandbytes as bnb
 
 from gts.data_loader import get_dataloaders
 
@@ -15,17 +12,7 @@ from transformers import logging as hf_logging
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 hf_logging.set_verbosity_info()
-
-
-def create_optimizer(model, learning_rate, weight_decay):
-    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
-    decay_parameters = [name for name in decay_parameters if "bias" not in name]
-    optimizer_grouped_parameters = [
-        {"params": [p for n, p in model.named_parameters() if n in decay_parameters], "weight_decay": weight_decay},
-        {"params": [p for n, p in model.named_parameters() if n not in decay_parameters], "weight_decay": 0.0},
-    ]
-
-    return bnb.optim.Adam8bit(optimizer_grouped_parameters, betas=(0.9, 0.999), eps=1e-8, lr=learning_rate)
+torch.set_default_dtype(torch.bfloat16)
 
 
 def main(args):
@@ -33,7 +20,12 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    model = AutoModelForCausalLM.from_pretrained(model_path, device_map="auto", torch_dtype=torch.bfloat16)
+    model = AutoModelForCausalLM.from_pretrained(model_path,
+                                                 device_map="auto",
+                                                 torch_dtype=torch.bfloat16,
+                                                 attn_implementation="flash_attention_2"
+                                                 )
+
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
     print(f"Starting Fine-Tuning of Model {model_path}")
@@ -52,11 +44,9 @@ def main(args):
         tokenizer=tokenizer,
         train_size=args.train_size,
         data_path=args.data_path,
-        add_domain_info=args.include_domain_info
+        format=args.format,
     )
     print("done")
-
-    optimizer = create_optimizer(model, args.learning_rate, args.weight_decay)
 
     out_path = Path(args.output_dir) / save_path
     if not out_path.exists():
@@ -66,12 +56,15 @@ def main(args):
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
+        dataloader_num_workers=4,
+        torch_compile=True,
         evaluation_strategy="no",
         num_train_epochs=args.num_epochs,
+        optim="adamw_bnb_8bit",
         save_strategy="epoch",
         save_steps=1,
-        per_device_train_batch_size=args.batch_size,
-        per_device_eval_batch_size=args.batch_size,
+        per_device_train_batch_size=1,
+        per_device_eval_batch_size=1,
         learning_rate=args.learning_rate,
         lr_scheduler_type="cosine",
         bf16=True,
@@ -95,7 +88,7 @@ def main(args):
     trainer = Trainer(
         model=model,
         args=training_args,
-        optimizers=(optimizer, None) if not args.deepspeed else (None, None),
+        # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
         train_dataset=train_dataloader,
         eval_dataset=validation_dataloader,
     )
@@ -112,7 +105,7 @@ if __name__ == "__main__":
     parser.add_argument('--model_path', type=str, required=True, help='Model path on Huggingface hub')
     parser.add_argument('--tokenizer_path', type=str, help='Tokenizer path on Huggingface hub')
     parser.add_argument('--save_path', type=str, help='Save path for model and tokenizer')
-    parser.add_argument('--train_size', type=int, default=1, help='Training dataset size')
+    parser.add_argument('--train_size', type=float, default=1, help='Training dataset size')
     parser.add_argument('--batch_size', type=int, default=1, help='Batch size')
     parser.add_argument('--learning_rate', type=float, default=2e-5, help='Learning rate')
     parser.add_argument('--weight_decay', type=float, default=0.05, help='Weight decay')
@@ -123,6 +116,7 @@ if __name__ == "__main__":
     parser.add_argument('--data_path', type=str, default="data/beta_train.jsonl", help='Path to training data')
     parser.add_argument('--output_dir', type=str, default="models", help='Output directory for saving results')
     parser.add_argument('--deepspeed', action='store_true', help='Enable deepspeed optimization')
+    parser.add_argument("--format", type=str, default="{bos_token}{context}{sep_token}{input}{sep_token}|<START_LOSS>|{target}{eos_token}", help="Sequence format")
 
     args = parser.parse_args()
     main(args)

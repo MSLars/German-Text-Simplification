@@ -24,6 +24,23 @@ conda env create -f env.yml
 conda develop .
 ```
 
+Install FlashAttention afterwards. Following instructions are from:
+
+- Make sure that `packaging` is installed (`pip install packaging`)
+- Make sure that `ninja` is installed and that it works correctly (e.g. `ninja --version` then `echo $?` 
+should return exit code 0). 
+If not (sometimes `ninja --version` then echo `$?` returns a nonzero exit code), 
+uninstall then reinstall `ninja` (`pip uninstall -y ninja && pip install ninja`). 
+Without ninja, compiling can take a very long time (2h) 
+since it does not use multiple CPU cores. 
+With ninja compiling takes 3-5 minutes on a 64-core machine.
+- Then:
+
+```bash
+pip install flash-attn --no-build-isolation
+```
+
+
 ## Training Models
 
 To train custom models you need a `.jsonl` (JSON Lines)[https://jsonlines.org/] trainng file with two mandatory fields:
