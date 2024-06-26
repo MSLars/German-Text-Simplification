@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 
 import torch
-from torch.utils.data import DataLoader
+from torch.utils.data import DataLoader, random_split
 from tqdm import tqdm
 from transformers import LlamaTokenizerFast, DataCollatorWithPadding
 
@@ -16,7 +16,6 @@ from transformers import LlamaTokenizerFast, DataCollatorWithPadding
 def get_dataloaders(tokenizer,
                     train_size=1,
                     data_path="data/train.jsonl",
-                    add_domain_info=False,
                     format=None):
     """
     Prepares data loaders for model training by tokenizing and formatting the training data.
@@ -27,10 +26,9 @@ def get_dataloaders(tokenizer,
     - tokenizer: The tokenizer to be used for processing the data. This should be compatible with the model to be trained.
     - train_size (float, optional): A multiplier for the size of the training data. Default is 1, which uses the entire dataset as training data. Values less than 1 will reduce the train dataset and increase the validation dataset proportionally.
     - data_path (str, optional): Path to the training data file. The default is "data/train.jsonl", assuming a JSONL format.
-    - mem_efficient (bool, optional): If set to True, the function will load data in a memory-efficient manner. This is useful for large datasets. Default is False.
     - format (str, optional): Format of the sequence used for training.
     Returns:
-    Train and Validation DataLoader
+    Train and Validation datasets
     """
 
     input_ids = []
@@ -42,9 +40,9 @@ def get_dataloaders(tokenizer,
     raw_json_data = srsly.read_jsonl(data_path)
     for raw_elem in tqdm(raw_json_data):
         joined_text_with_split_token = format.format(bos_token=tokenizer.bos_token,
-                                     sep_token=tokenizer.sep_token,
-                                     eos_token=tokenizer.eos_token,
-                                     **raw_elem)
+                                                     sep_token=tokenizer.sep_token,
+                                                     eos_token=tokenizer.eos_token,
+                                                     **raw_elem)
 
         input_txt, output_text = joined_text_with_split_token.split("|<START_LOSS>|")
         input_ids_complex, _ = tokenizer(input_txt, add_special_tokens=False).values()
@@ -60,7 +58,7 @@ def get_dataloaders(tokenizer,
         assert token_ids[:complex_count] == input_ids_complex
         assert token_ids[complex_count:complex_count + len(target_ids)] == target_ids
         assert token_ids[:complex_count][-1] == tokenizer.sep_token_id
-        assert token_ids[complex_count + len(target_ids)-1] == tokenizer.eos_token_id
+        assert token_ids[complex_count + len(target_ids) - 1] == tokenizer.eos_token_id
 
         logit_mask = np.array(attention_mask)
         logit_mask[:complex_count] = 0
@@ -78,11 +76,7 @@ def get_dataloaders(tokenizer,
         gptq_samples.append((input_txt + output_text).replace(tokenizer.bos_token, "").replace(tokenizer.eos_token, ""))
 
     data = Dataset.from_dict({"input_ids": input_ids, "attention_mask": attention_masks, "labels": output_labels})
-    train_data, validation_data = torch.utils.data.random_split(data, [int(train_size * len(data)), len(data) - int(train_size * len(data))], generator=torch.Generator().manual_seed(42))
+    train_size = int(train_size * len(data))
+    train_data, validation_data = random_split(data, [train_size, len(data) - train_size], generator=torch.Generator().manual_seed(42))
 
-    data_collator = DataCollatorWithPadding(tokenizer)
-
-    train_dataloader = DataLoader(train_data, batch_size=1, collate_fn=data_collator, num_workers=4)
-    validation_dataloader = DataLoader(validation_data, batch_size=1, collate_fn=data_collator, num_workers=4)
-
-    return train_dataloader, validation_dataloader, gptq_samples[:1000]
+    return train_data, validation_data, gptq_samples[:1000]

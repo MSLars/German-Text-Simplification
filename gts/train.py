@@ -3,7 +3,8 @@ import argparse
 
 import torch
 from torch.utils.data import DataLoader
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig, \
+    DataCollatorWithPadding
 
 from gts.data_loader import get_dataloaders
 
@@ -54,6 +55,8 @@ def main(args):
         print(f"{out_path} does not exist, creating directory.")
         out_path.mkdir(parents=True)
 
+    data_collator = DataCollatorWithPadding(tokenizer)
+
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
@@ -93,6 +96,7 @@ def main(args):
         # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
+        data_collator=data_collator
     )
 
     try:
