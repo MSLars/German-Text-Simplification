@@ -99,6 +99,7 @@ def main(args):
         logging_dir='./runs',
         deepspeed=args.deepspeed_config if args.deepspeed else None
     )
+    torch.set_default_dtype(torch.bfloat16)
 
     with torch.no_grad():
         model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
@@ -116,6 +117,9 @@ def main(args):
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
     )
+
+    model.to(dtype=torch.bfloat16)
+
     try:
         print("Starting training...")
         trainer.train()
@@ -123,7 +127,6 @@ def main(args):
         print(f"Caught RuntimeError: {e}")
         torch.cuda.empty_cache()
         print(torch.cuda.memory_summary(device=device))
-
     model.save_pretrained(str(out_path))
     tokenizer.save_pretrained(str(out_path))
 
