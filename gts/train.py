@@ -18,29 +18,12 @@ torch.set_default_dtype(torch.bfloat16)
 torch.cuda.empty_cache()
 
 
-def move_to_device(batch, device):
-    """Move tensors in batch to the specified device."""
-    if isinstance(batch, dict):
-        return {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
-    elif torch.is_tensor(batch):
-        return batch.to(device)
-    else:
-        raise TypeError("batch must be a tensor or a dictionary of tensors")
-
-
-def collate_fn_with_device(device):
-    """Return a collate function that moves batches to the specified device."""
-    def collate_fn(batch):
-        return move_to_device(batch, device)
-    return collate_fn
-
-
 def main(args):
     model_path = args.model_path
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  device_map="auto",
@@ -108,8 +91,6 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
-    collate_fn = collate_fn_with_device(device)
-
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -117,8 +98,6 @@ def main(args):
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
     )
-
-    model.to(dtype=torch.bfloat16)
 
     try:
         print("Starting training...")
@@ -131,12 +110,6 @@ def main(args):
     tokenizer.save_pretrained(str(out_path))
 
     print(f"Model and tokenizer saved at {out_path}")
-
-    # gptq_config = GPTQConfig(bits=4, dataset=gptq_samples, tokenizer=tokenizer)
-    # quantized_model = AutoModelForCausalLM.from_pretrained(str(out_path), device_map="auto", quantization_config=gptq_config)
-    #
-    # quantized_model.save_pretrained(str(out_path) + "-gptq")
-    # tokenizer.save_pretrained(str(out_path) + "-gptq")
 
     print(f"Model and tokenizer saved at {out_path}")
 
