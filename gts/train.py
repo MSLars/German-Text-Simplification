@@ -115,7 +115,6 @@ def main(args):
         # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
-        data_collator=collate_fn,
     )
     try:
         print("Starting training...")
