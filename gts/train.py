@@ -45,7 +45,7 @@ def main(args):
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  device_map="auto",
                                                  torch_dtype=torch.bfloat16,
-                                                 attn_implementation="flash_attention_2"
+                                                 #attn_implementation="flash_attention_2"
                                                  ).to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -79,7 +79,7 @@ def main(args):
         output_dir=str(out_path),
         overwrite_output_dir=True,
         dataloader_num_workers=4,
-        #torch_compile=True,
+        torch_compile=True,
         evaluation_strategy="no",
         num_train_epochs=args.num_epochs,
         optim="adamw_bnb_8bit",
