@@ -23,11 +23,9 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  #device_map="auto",
-                                                 torch_dtype=torch.bfloat16,).to(device)
+                                                 torch_dtype=torch.bfloat16,)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
@@ -103,7 +101,7 @@ def main(args):
     except RuntimeError as e:
         print(f"Caught RuntimeError: {e}")
         torch.cuda.empty_cache()
-        print(torch.cuda.memory_summary(device=device))
+        print(torch.cuda.memory_summary(device="cuda"))
     model.save_pretrained(str(out_path))
     tokenizer.save_pretrained(str(out_path))
 
