@@ -57,7 +57,7 @@ def main(args):
         output_dir=str(out_path),
         overwrite_output_dir=True,
         dataloader_num_workers=4,
-        torch_compile=True,
+        #torch_compile=True,
         evaluation_strategy="no",
         num_train_epochs=args.num_epochs,
         optim="adamw_bnb_8bit",
