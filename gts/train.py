@@ -27,9 +27,7 @@ def main(args):
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  #device_map="auto",
-                                                 torch_dtype=torch.bfloat16,
-                                                 #attn_implementation="flash_attention_2"
-                                                 ).to(device)
+                                                 torch_dtype=torch.bfloat16,).to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
