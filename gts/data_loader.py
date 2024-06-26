@@ -8,8 +8,9 @@ import numpy as np
 import pandas as pd
 
 import torch
+from torch.utils.data import DataLoader
 from tqdm import tqdm
-from transformers import LlamaTokenizerFast
+from transformers import LlamaTokenizerFast, DataCollatorWithPadding
 
 
 def get_dataloaders(tokenizer,
@@ -79,4 +80,9 @@ def get_dataloaders(tokenizer,
     data = Dataset.from_dict({"input_ids": input_ids, "attention_mask": attention_masks, "labels": output_labels})
     train_data, validation_data = torch.utils.data.random_split(data, [int(train_size * len(data)), len(data) - int(train_size * len(data))], generator=torch.Generator().manual_seed(42))
 
-    return train_data, validation_data, gptq_samples[:1000]
+    data_collator = DataCollatorWithPadding(tokenizer)
+
+    train_dataloader = DataLoader(train_data, batch_size=1, collate_fn=data_collator, num_workers=4)
+    validation_dataloader = DataLoader(validation_data, batch_size=1, collate_fn=data_collator, num_workers=4)
+
+    return train_dataloader, validation_dataloader, gptq_samples[:1000]
