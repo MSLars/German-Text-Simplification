@@ -2,6 +2,7 @@ from pathlib import Path
 import argparse
 
 import torch
+from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig
 
 from gts.data_loader import get_dataloaders
@@ -15,6 +16,23 @@ hf_logging.set_verbosity_info()
 
 torch.set_default_dtype(torch.bfloat16)
 torch.cuda.empty_cache()
+
+
+def move_to_device(batch, device):
+    """Move tensors in batch to the specified device."""
+    if isinstance(batch, dict):
+        return {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
+    elif torch.is_tensor(batch):
+        return batch.to(device)
+    else:
+        raise TypeError("batch must be a tensor or a dictionary of tensors")
+
+
+def collate_fn_with_device(device):
+    """Return a collate function that moves batches to the specified device."""
+    def collate_fn(batch):
+        return move_to_device(batch, device)
+    return collate_fn
 
 
 def main(args):
@@ -44,7 +62,7 @@ def main(args):
         print("Set PAD-Token to |<PAD>|")
 
     print("Preprocessing...")
-    train_dataloader, validation_dataloader, gptq_samples = get_dataloaders(
+    train_dataset, validation_dataset, gptq_samples = get_dataloaders(
         tokenizer=tokenizer,
         train_size=args.train_size,
         data_path=args.data_path,
@@ -89,17 +107,12 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
-    # Ensure dataloaders use the same device
-    def move_to_device(batch, device):
-        if isinstance(batch, dict):
-            return {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
-        elif torch.is_tensor(batch):
-            return batch.to(device)
-        else:
-            raise TypeError("batch must be a tensor or a dictionary of tensors")
-
-    train_dataloader = [(move_to_device(batch, device), labels) for batch, labels in train_dataloader]
-    validation_dataloader = [(move_to_device(batch, device), labels) for batch, labels in validation_dataloader]
+    # Create DataLoader with custom collate_fn
+    collate_fn = collate_fn_with_device(device)
+    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
+                                                   collate_fn=collate_fn)
+    validation_dataloader = DataLoader(validation_dataset, batch_size=args.batch_size,
+                                                        collate_fn=collate_fn)
 
     trainer = Trainer(
         model=model,
@@ -107,6 +120,7 @@ def main(args):
         # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
         train_dataset=train_dataloader,
         eval_dataset=validation_dataloader,
+        data_collator=collate_fn,
     )
     try:
         print("Starting training...")
