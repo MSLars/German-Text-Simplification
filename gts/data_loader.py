@@ -36,6 +36,7 @@ def get_dataloaders(tokenizer,
     attention_masks = []
     logit_masks = []
     output_labels = []
+    gptq_samples = []
 
     raw_json_data = srsly.read_jsonl(data_path)
     for raw_elem in tqdm(raw_json_data):
@@ -49,7 +50,7 @@ def get_dataloaders(tokenizer,
         target_ids, _ = tokenizer(output_text, add_special_tokens=False).values()
 
         token_ids, attention_mask = tokenizer(input_txt + output_text, add_special_tokens=False).values()
-        if len(token_ids) > 512:
+        if len(token_ids) > 1500:
             continue
 
         complex_count = len(input_ids_complex)
@@ -73,8 +74,9 @@ def get_dataloaders(tokenizer,
         attention_masks.append(attention_mask)
         logit_masks.append(logit_mask)
         output_labels.append(labels)
+        gptq_samples.append((input_txt + output_text).replace(tokenizer.bos_token, "").replace(tokenizer.eos_token, ""))
 
     data = Dataset.from_dict({"input_ids": input_ids, "attention_mask": attention_masks, "labels": output_labels})
     train_data, validation_data = torch.utils.data.random_split(data, [int(train_size * len(data)), len(data) - int(train_size * len(data))], generator=torch.Generator().manual_seed(42))
 
-    return train_data, validation_data
+    return train_data, validation_data, gptq_samples[:1000]

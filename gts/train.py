@@ -2,7 +2,7 @@ from pathlib import Path
 import argparse
 
 import torch
-from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer
+from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig
 
 from gts.data_loader import get_dataloaders
 
@@ -40,7 +40,7 @@ def main(args):
         print("Set PAD-Token to |<PAD>|")
 
     print("Preprocessing...")
-    train_dataloader, validation_dataloader = get_dataloaders(
+    train_dataloader, validation_dataloader, gptq_samples = get_dataloaders(
         tokenizer=tokenizer,
         train_size=args.train_size,
         data_path=args.data_path,
@@ -94,8 +94,15 @@ def main(args):
     )
 
     trainer.train()
+
     model.save_pretrained(str(out_path))
     tokenizer.save_pretrained(str(out_path))
+
+    # gptq_config = GPTQConfig(bits=4, dataset=gptq_samples, tokenizer=tokenizer)
+    # quantized_model = AutoModelForCausalLM.from_pretrained(str(out_path), device_map="auto", quantization_config=gptq_config)
+    #
+    # quantized_model.save_pretrained(str(out_path) + "-gptq")
+    # tokenizer.save_pretrained(str(out_path) + "-gptq")
 
     print(f"Model and tokenizer saved at {out_path}")
 
