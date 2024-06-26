@@ -22,7 +22,7 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  device_map="auto",
@@ -89,6 +89,18 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
+    # Ensure dataloaders use the same device
+    def move_to_device(batch, device):
+        if isinstance(batch, dict):
+            return {k: v.to(device) if torch.is_tensor(v) else v for k, v in batch.items()}
+        elif torch.is_tensor(batch):
+            return batch.to(device)
+        else:
+            raise TypeError("batch must be a tensor or a dictionary of tensors")
+
+    train_dataloader = [(move_to_device(batch, device), labels) for batch, labels in train_dataloader]
+    validation_dataloader = [(move_to_device(batch, device), labels) for batch, labels in validation_dataloader]
+
     trainer = Trainer(
         model=model,
         args=training_args,
@@ -106,6 +118,8 @@ def main(args):
 
     model.save_pretrained(str(out_path))
     tokenizer.save_pretrained(str(out_path))
+
+    print(f"Model and tokenizer saved at {out_path}")
 
     # gptq_config = GPTQConfig(bits=4, dataset=gptq_samples, tokenizer=tokenizer)
     # quantized_model = AutoModelForCausalLM.from_pretrained(str(out_path), device_map="auto", quantization_config=gptq_config)
