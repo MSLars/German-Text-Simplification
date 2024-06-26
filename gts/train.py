@@ -107,19 +107,14 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
-    # Create DataLoader with custom collate_fn
     collate_fn = collate_fn_with_device(device)
-    train_dataloader = DataLoader(train_dataset, batch_size=args.batch_size, shuffle=True,
-                                                   collate_fn=collate_fn)
-    validation_dataloader = DataLoader(validation_dataset, batch_size=args.batch_size,
-                                                        collate_fn=collate_fn)
 
     trainer = Trainer(
         model=model,
         args=training_args,
         # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
-        train_dataset=train_dataloader,
-        eval_dataset=validation_dataloader,
+        train_dataset=train_dataset,
+        eval_dataset=validation_dataset,
         data_collator=collate_fn,
     )
     try:
