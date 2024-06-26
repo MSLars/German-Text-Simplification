@@ -60,6 +60,7 @@ def main(args):
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
+        split_batches=False,
         dataloader_num_workers=4,
         # torch_compile=True,
         evaluation_strategy="no",
