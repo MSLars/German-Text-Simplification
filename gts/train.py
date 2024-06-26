@@ -12,7 +12,9 @@ from transformers import logging as hf_logging
 # Configure logging
 logging.basicConfig(level=logging.INFO)
 hf_logging.set_verbosity_info()
+
 torch.set_default_dtype(torch.bfloat16)
+torch.cuda.empty_cache()
 
 
 def main(args):
@@ -20,11 +22,13 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
+    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+
     model = AutoModelForCausalLM.from_pretrained(model_path,
                                                  device_map="auto",
                                                  torch_dtype=torch.bfloat16,
                                                  attn_implementation="flash_attention_2"
-                                                 )
+                                                 ).to(device)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
@@ -92,8 +96,13 @@ def main(args):
         train_dataset=train_dataloader,
         eval_dataset=validation_dataloader,
     )
-
-    trainer.train()
+    try:
+        print("Starting training...")
+        trainer.train()
+    except RuntimeError as e:
+        print(f"Caught RuntimeError: {e}")
+        torch.cuda.empty_cache()
+        print(torch.cuda.memory_summary(device=device))
 
     model.save_pretrained(str(out_path))
     tokenizer.save_pretrained(str(out_path))
