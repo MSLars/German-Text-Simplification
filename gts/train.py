@@ -58,8 +58,8 @@ def main(args):
         output_dir=str(out_path),
         overwrite_output_dir=True,
         dataloader_num_workers=4,
-        torch_compile=True,
-        evaluation_strategy="no",
+        # torch_compile=True,
+        eval_strategy="no",
         num_train_epochs=args.num_epochs,
         optim="adamw_bnb_8bit",
         save_strategy="epoch",
@@ -77,7 +77,7 @@ def main(args):
         logging_steps=1,
         logging_dir='./runs',
         accelerator_config={"split_batches": False},
-        deepspeed=args.deepspeed_config if args.deepspeed else None
+        report_to="all"
     )
     torch.set_default_dtype(torch.bfloat16)
 
