@@ -20,7 +20,6 @@ logging.basicConfig(level=logging.INFO)
 hf_logging.set_verbosity_info()
 
 torch.set_default_dtype(torch.bfloat16)
-torch.cuda.empty_cache()
 
 
 def create_optimizer(model, weight_dacy, lr):
@@ -45,8 +44,6 @@ def create_optimizer(model, weight_dacy, lr):
     )
 
     return adam_bnb_optim
-
-
 
 def main(args):
     model_path = args.model_path
@@ -106,8 +103,7 @@ def main(args):
         run_name="seminar_easy_language",
         logging_steps=1,
         logging_dir='./runs',
-        accelerator_config={"split_batches": False},
-        report_to="all"
+        report_to="all",
     )
     torch.set_default_dtype(torch.bfloat16)
 
