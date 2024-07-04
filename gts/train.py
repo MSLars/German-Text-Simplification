@@ -24,9 +24,9 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    config = AutoConfig.from_pretrained(model_path)
-
-    model = AutoModelForCausalLM.from_pretrained(config)
+    model = AutoModelForCausalLM.from_pretrained(model_path,
+                                                 torch_dtype=torch.bfloat16,
+                                                 attn_implementation="sdpa")
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
@@ -81,7 +81,7 @@ def main(args):
         accelerator_config={"split_batches": False},
         report_to="all"
     )
-
+    torch.set_default_dtype(torch.bfloat16)
 
     with torch.no_grad():
         model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
