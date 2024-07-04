@@ -94,6 +94,7 @@ def main(args):
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         learning_rate=args.learning_rate,
+        ddp_backend="nccl",
         fsdp="shard_grad_op",
         lr_scheduler_type="cosine",
         bf16=True,
