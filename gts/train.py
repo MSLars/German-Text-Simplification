@@ -51,7 +51,7 @@ def main(args):
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
-                                                 # device_map="auto",
+                                                 device_map="auto",
                                                  torch_dtype=torch.bfloat16,)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -94,6 +94,7 @@ def main(args):
         per_device_train_batch_size=1,
         per_device_eval_batch_size=1,
         learning_rate=args.learning_rate,
+        fsdp="shard_grad_op",
         lr_scheduler_type="cosine",
         bf16=True,
         warmup_steps=100,
