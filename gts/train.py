@@ -25,8 +25,7 @@ def main(args):
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
-                                                 torch_dtype=torch.bfloat16,
-                                                 attn_implementation="sdpa")
+                                                 torch_dtype=torch.bfloat16,)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
@@ -60,10 +59,11 @@ def main(args):
         overwrite_output_dir=True,
         dataloader_num_workers=2,
         dataloader_pin_memory=True,
-        torch_compile=True,
+        #torch_compile=True,
         eval_strategy="no",
         num_train_epochs=args.num_epochs,
-        optim="adamw_bnb_8bit",
+        #optim="adamw_bnb_8bit",
+        optim="adafactor",
         save_strategy="epoch",
         save_steps=1,
         per_device_train_batch_size=1,
