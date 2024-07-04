@@ -57,7 +57,6 @@ def main(args):
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
-        split_batches=False,
         dataloader_num_workers=4,
         torch_compile=True,
         evaluation_strategy="no",
@@ -77,7 +76,7 @@ def main(args):
         run_name="seminar_easy_language",
         logging_steps=1,
         logging_dir='./runs',
-        accelerator_config={"split_batches": True},
+        accelerator_config={"split_batches": False},
         deepspeed=args.deepspeed_config if args.deepspeed else None
     )
     torch.set_default_dtype(torch.bfloat16)
