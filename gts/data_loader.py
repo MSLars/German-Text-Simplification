@@ -69,6 +69,11 @@ def get_dataloaders(tokenizer,
 
         assert [l for l in labels.tolist() if l >= 0] == target_ids
 
+        token_ids = token_ids + [tokenizer.pad_token_id] * (2048 - len(token_ids))
+        attention_mask = attention_mask + [0] * (2048 - len(attention_mask))
+        logit_mask = list(logit_mask) + [0] * (2048 - len(logit_mask))
+        labels = list(labels) + [-100] * (2048 - len(labels))
+
         input_ids.append(token_ids)
         attention_masks.append(attention_mask)
         logit_masks.append(logit_mask)
