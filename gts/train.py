@@ -25,7 +25,6 @@ def main(args):
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
-                                                 #device_map="auto",
                                                  torch_dtype=torch.bfloat16,)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
@@ -55,14 +54,12 @@ def main(args):
         print(f"{out_path} does not exist, creating directory.")
         out_path.mkdir(parents=True)
 
-    data_collator = DataCollatorWithPadding(tokenizer)
-
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
         split_batches=False,
         dataloader_num_workers=4,
-        # torch_compile=True,
+        torch_compile=True,
         evaluation_strategy="no",
         num_train_epochs=args.num_epochs,
         optim="adamw_bnb_8bit",
@@ -97,7 +94,6 @@ def main(args):
         # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
-        data_collator=data_collator
     )
 
     try:

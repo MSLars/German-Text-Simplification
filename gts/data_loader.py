@@ -49,7 +49,7 @@ def get_dataloaders(tokenizer,
         target_ids, _ = tokenizer(output_text, add_special_tokens=False).values()
 
         token_ids, attention_mask = tokenizer(input_txt + output_text, add_special_tokens=False).values()
-        if len(token_ids) > 1500:
+        if len(token_ids) > 1024:
             continue
 
         complex_count = len(input_ids_complex)
