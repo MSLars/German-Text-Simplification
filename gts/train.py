@@ -51,7 +51,7 @@ def main(args):
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
     model = AutoModelForCausalLM.from_pretrained(model_path,
-                                                 device_map="auto",
+                                                 # device_map="auto",
                                                  torch_dtype=torch.bfloat16,)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
