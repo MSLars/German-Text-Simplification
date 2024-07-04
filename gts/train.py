@@ -119,7 +119,7 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
-    optimizer = create_optimizer(model, args.weight_dacy, args.learning_rate)
+    optimizer = create_optimizer(model, args.weight_decay, args.learning_rate)
 
     trainer = Trainer(
         model=model,
