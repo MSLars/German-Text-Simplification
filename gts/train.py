@@ -77,6 +77,7 @@ def main(args):
         run_name="seminar_easy_language",
         logging_steps=1,
         logging_dir='./runs',
+        accelerator_config={"split_batches": True},
         deepspeed=args.deepspeed_config if args.deepspeed else None
     )
     torch.set_default_dtype(torch.bfloat16)
