@@ -2,14 +2,18 @@ from pathlib import Path
 import argparse
 
 import torch
+from torch import nn
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig, \
     DataCollatorWithPadding, AutoConfig
+from transformers.trainer_pt_utils import get_parameter_names
 
 from gts.data_loader import get_dataloaders
 
 import logging
 from transformers import logging as hf_logging
+
+import bitsandbytes as bnb
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -17,6 +21,31 @@ hf_logging.set_verbosity_info()
 
 torch.set_default_dtype(torch.bfloat16)
 torch.cuda.empty_cache()
+
+
+def create_optimizer(model, weight_dacy, lr):
+    decay_parameters = get_parameter_names(model, [nn.LayerNorm])
+    decay_parameters = [name for name in decay_parameters if "bias" not in name]
+    optimizer_grouped_parameters = [
+        {
+            "params": [p for n, p in model.named_parameters() if n in decay_parameters],
+            "weight_decay": weight_dacy,
+        },
+        {
+            "params": [p for n, p in model.named_parameters() if n not in decay_parameters],
+            "weight_decay": 0.0,
+        },
+    ]
+
+    adam_bnb_optim = bnb.optim.Adam8bit(
+        optimizer_grouped_parameters,
+        betas=(0.9, 0.999),
+        eps=1e-8,
+        lr=lr,
+    )
+
+    return adam_bnb_optim
+
 
 
 def main(args):
@@ -90,10 +119,12 @@ def main(args):
     model.config.bos_token_id = tokenizer.bos_token_id
     model.config.sep_token_id = tokenizer.sep_token_id
 
+    optimizer = create_optimizer(model, args.weight_dacy, args.learning_rate)
+
     trainer = Trainer(
         model=model,
         args=training_args,
-        # optimizers=(optimizer, None) if not args.deepspeed else (None, None),
+        optimizers=(optimizer, None),
         train_dataset=train_dataset,
         eval_dataset=validation_dataset,
     )
