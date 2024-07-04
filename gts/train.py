@@ -4,7 +4,7 @@ import argparse
 import torch
 from torch.utils.data import DataLoader
 from transformers import AutoTokenizer, AutoModelForCausalLM, TrainingArguments, Trainer, GPTQConfig, \
-    DataCollatorWithPadding
+    DataCollatorWithPadding, AutoConfig
 
 from gts.data_loader import get_dataloaders
 
@@ -24,8 +24,9 @@ def main(args):
     tokenizer_path = args.tokenizer_path if args.tokenizer_path else model_path
     save_path = args.save_path if args.save_path else model_path.split("/")[-1]
 
-    model = AutoModelForCausalLM.from_pretrained(model_path,
-                                                 torch_dtype=torch.bfloat16,)
+    config = AutoConfig.from_pretrained(model_path)
+
+    model = AutoModelForCausalLM.from_pretrained(config)
 
     tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
 
@@ -57,8 +58,9 @@ def main(args):
     training_args = TrainingArguments(
         output_dir=str(out_path),
         overwrite_output_dir=True,
-        dataloader_num_workers=4,
-        # torch_compile=True,
+        dataloader_num_workers=2,
+        dataloader_pin_memory=True,
+        torch_compile=True,
         eval_strategy="no",
         num_train_epochs=args.num_epochs,
         optim="adamw_bnb_8bit",
@@ -79,7 +81,7 @@ def main(args):
         accelerator_config={"split_batches": False},
         report_to="all"
     )
-    torch.set_default_dtype(torch.bfloat16)
+
 
     with torch.no_grad():
         model.resize_token_embeddings(len(tokenizer), pad_to_multiple_of=8)
