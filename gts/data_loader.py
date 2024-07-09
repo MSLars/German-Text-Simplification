@@ -13,6 +13,27 @@ from tqdm import tqdm
 from transformers import LlamaTokenizerFast, DataCollatorWithPadding
 
 
+def get_gptq(tokenizer,
+                    train_size=1,
+                    data_path="data/train.jsonl",
+                    format=None):
+
+    gptq_samples = []
+
+    raw_json_data = srsly.read_jsonl(data_path)
+    for raw_elem in tqdm(raw_json_data):
+        joined_text_with_split_token = format.format(bos_token=tokenizer.bos_token,
+                                                     sep_token=tokenizer.sep_token,
+                                                     eos_token=tokenizer.eos_token,
+                                                     **raw_elem)
+
+        input_txt, output_text = joined_text_with_split_token.split("|<START_LOSS>|")
+
+        gptq_samples.append((input_txt + output_text).replace(tokenizer.bos_token, "").replace(tokenizer.eos_token, ""))
+
+    return gptq_samples
+
+
 def get_dataloaders(tokenizer,
                     train_size=1,
                     data_path="data/train.jsonl",
@@ -84,4 +105,4 @@ def get_dataloaders(tokenizer,
     train_size = int(train_size * len(data))
     train_data, validation_data = random_split(data, [train_size, len(data) - train_size], generator=torch.Generator().manual_seed(42))
 
-    return train_data, validation_data, gptq_samples[:1000]
+    return train_data, validation_data, gptq_samples

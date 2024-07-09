@@ -54,7 +54,7 @@ def main(args):
                                                  device_map="auto",
                                                  torch_dtype=torch.bfloat16,)
 
-    tokenizer = AutoTokenizer.from_pretrained(tokenizer_path)
+    tokenizer = AutoTokenizer.from_pretrained("DiscoResearch/Llama3-German-8B")
 
     print(f"Starting Fine-Tuning of Model {model_path}")
 
